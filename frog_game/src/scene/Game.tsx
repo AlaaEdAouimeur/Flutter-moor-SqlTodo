@@ -1,24 +1,44 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import Apartment from './Apartment'
 import Frog from './Frog'
 import Lighting from './Lighting'
 import DustMotes from './DustMotes'
+import Fireflies from './Fireflies'
 import { resolveCollisions } from './collisions'
-import { FROG_RADIUS, OBSTACLES, START_POSITION } from './layout'
+import { COLLECT_RADIUS, FROG_RADIUS, OBSTACLES, SPRITE_SPOTS, START_POSITION } from './layout'
 import type { InputVector } from '../hooks/useInputRef'
+import { playChime, playFanfare } from '../audio/sound'
 
 const SPEED = 3.1
 const CAMERA_OFFSET = new THREE.Vector3(0, 6.2, 6.5)
+const TOTAL_SPRITES = SPRITE_SPOTS.length
 
-export default function Game({ inputRef }: { inputRef: React.MutableRefObject<InputVector> }) {
+export default function Game({
+  inputRef,
+  onProgress,
+}: {
+  inputRef: React.MutableRefObject<InputVector>
+  onProgress?: (count: number, total: number) => void
+}) {
   const frogGroup = useRef<THREE.Group>(null)
   const position = useRef(new THREE.Vector2(START_POSITION[0], START_POSITION[1]))
   const facing = useRef(Math.PI)
   const [moving, setMoving] = useState(false)
   const { camera } = useThree()
   const cameraInitialized = useRef(false)
+  const collectedIds = useRef(new Set<string>())
+  const [collectedCount, setCollectedCount] = useState(0)
+  const wonRef = useRef(false)
+
+  useEffect(() => {
+    onProgress?.(collectedCount, TOTAL_SPRITES)
+    if (collectedCount === TOTAL_SPRITES && !wonRef.current) {
+      wonRef.current = true
+      playFanfare()
+    }
+  }, [collectedCount, onProgress])
 
   useFrame((_, dtRaw) => {
     const dt = Math.min(dtRaw, 0.05)
@@ -40,6 +60,17 @@ export default function Game({ inputRef }: { inputRef: React.MutableRefObject<In
     }
 
     if (isMoving !== moving) setMoving(isMoving)
+
+    for (const spot of SPRITE_SPOTS) {
+      if (collectedIds.current.has(spot.id)) continue
+      const dx = position.current.x - spot.x
+      const dz = position.current.y - spot.z
+      if (dx * dx + dz * dz < COLLECT_RADIUS * COLLECT_RADIUS) {
+        collectedIds.current.add(spot.id)
+        setCollectedCount(collectedIds.current.size)
+        playChime()
+      }
+    }
 
     const group = frogGroup.current
     if (group) {
@@ -64,6 +95,7 @@ export default function Game({ inputRef }: { inputRef: React.MutableRefObject<In
       <Lighting />
       <Apartment />
       <DustMotes />
+      <Fireflies spots={SPRITE_SPOTS} collected={collectedIds.current} />
       <Frog ref={frogGroup} moving={moving} speed={1} />
     </>
   )

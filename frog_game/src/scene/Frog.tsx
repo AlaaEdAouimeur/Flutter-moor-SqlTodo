@@ -1,6 +1,7 @@
 import { forwardRef, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import { playRibbit } from '../audio/sound'
 
 export interface FrogHandle {
   group: THREE.Group | null
@@ -15,6 +16,7 @@ const Frog = forwardRef<THREE.Group, { moving: boolean; speed: number }>(functio
   ref
 ) {
   const hopPhase = useRef(0)
+  const prevBounce = useRef(0)
   const blinkTimer = useRef(2)
   const leftEye = useRef<THREE.Mesh>(null)
   const rightEye = useRef<THREE.Mesh>(null)
@@ -36,6 +38,8 @@ const Frog = forwardRef<THREE.Group, { moving: boolean; speed: number }>(functio
     if (moving) {
       hopPhase.current += dt * (4 + speed * 2.2)
       const bounce = Math.max(0, Math.sin(hopPhase.current))
+      if (prevBounce.current <= 0.01 && bounce > 0.01) playRibbit()
+      prevBounce.current = bounce
       body.position.y = 0.28 + bounce * 0.22
       const squash = 1 - bounce * 0.18
       body.scale.set(1 + bounce * 0.12, squash, 1 + bounce * 0.12)
@@ -47,6 +51,7 @@ const Frog = forwardRef<THREE.Group, { moving: boolean; speed: number }>(functio
       if (legBR.current) legBR.current.rotation.x = legSwing * 0.7
     } else {
       hopPhase.current = 0
+      prevBounce.current = 0
       const idle = Math.sin(performance.now() * 0.0015) * 0.02
       body.position.y = THREE.MathUtils.lerp(body.position.y, 0.28 + idle, 0.1)
       body.scale.set(

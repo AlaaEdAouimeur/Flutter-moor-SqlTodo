@@ -48,3 +48,26 @@ export const OBSTACLES: Obstacle[] = [
 export const FROG_RADIUS = 0.32
 export const START_POSITION: [number, number] = [-3, -3]
 export const DOORWAY = { x: 1, minZ: -1, maxZ: 1 }
+
+export interface SpriteSpot {
+  id: string
+  x: number
+  z: number
+  y: number
+}
+
+// Collectible "spirit sprites" (Totoro-ish soot fireflies) tucked around both
+// rooms -- some in the open, some worth exploring corners for.
+export const SPRITE_SPOTS: SpriteSpot[] = [
+  { id: 'f1', x: -5.4, z: 4.5, y: 1.3 },
+  { id: 'f2', x: -2.0, z: 3.0, y: 0.95 },
+  { id: 'f3', x: -4.6, z: -3.4, y: 1.0 },
+  { id: 'f4', x: -1.2, z: -1.0, y: 1.4 },
+  { id: 'f5', x: -5.6, z: -0.7, y: 0.85 },
+  { id: 'f6', x: -0.3, z: 4.6, y: 1.6 },
+  { id: 'f7', x: 2.7, z: -4.2, y: 0.9 },
+  { id: 'f8', x: 5.7, z: -0.5, y: 1.3 },
+  { id: 'f9', x: 4.0, z: 2.2, y: 1.0 },
+  { id: 'f10', x: 1.6, z: 1.5, y: 1.7 },
+]
+export const COLLECT_RADIUS = 0.55
